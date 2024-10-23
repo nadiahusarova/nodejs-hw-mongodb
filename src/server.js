@@ -1,17 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import pino from 'pino-http';
-import dotenv from 'dotenv';
-
-dotenv.config();
+const express = require('express');
+const cors = require('cors');
+const pino = require('pino-http')();
 
 const setupServer = () => {
   const app = express();
+
   app.use(cors());
-  app.use(pino());
-
-  app.use(express.json());
-
+  app.use(pino);
 
   app.use((req, res) => {
     res.status(404).json({ message: 'Not found' });
@@ -23,4 +18,4 @@ const setupServer = () => {
   });
 };
 
-export default setupServer;
+module.exports = setupServer;

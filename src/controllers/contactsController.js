@@ -1,4 +1,4 @@
-import { getAllContacts } from "../services/contacts.js";
+import contactsModel from "../models/contacts.js";
 import { findContactById } from "../services/contacts.js";
 import mongoose from "mongoose";
 import ctrlWrapper from "../utils/ctrlWrapper.js";
@@ -8,13 +8,37 @@ import { deleteContactById } from "../services/contacts.js";
 import createError from "http-errors";
 
 const getContactsController = async (req, res) => {
-  const contacts = await getAllContacts();
-  console.log("Contacts retrieved:", contacts);
+  const {
+    page = 1,
+    perPage = 10,
+    sortBy = "name",
+    sortOrder = "asc",
+  } = req.query;
+  const pageNumber = parseInt(page, 10);
+  const perPageNumber = parseInt(perPage, 10);
+  const totalItems = await contactsModel.countDocuments();
+  const skip = (pageNumber - 1) * perPageNumber;
+  const sortDirection = sortOrder === "desc" ? -1 : 1;
+  const contacts = await contactsModel
+    .find()
+    .skip(skip)
+    .limit(perPageNumber)
+    .sort({ [sortBy]: sortDirection });
+
+  const totalPages = Math.ceil(totalItems / perPageNumber);
 
   res.status(200).json({
     status: 200,
     message: "Successfully found contacts!",
-    data: contacts,
+    data: {
+      data: contacts,
+      page: pageNumber,
+      perPage: perPageNumber,
+      totalItems,
+      totalPages,
+      hasPreviousPage: pageNumber > 1,
+      hasNextPage: pageNumber < totalPages,
+    },
   });
 };
 

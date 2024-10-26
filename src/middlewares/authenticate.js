@@ -1,35 +1,54 @@
-import jwt from "jsonwebtoken";
-import createError from "http-errors";
-import User from "../models/user.js";
-import Session from "../models/session.js";
+import createHttpError from 'http-errors';
 
-const authenticate = async (req, res, next) => {
-  const { authorization = "" } = req.headers;
-  const [bearer, token] = authorization.split(" ");
+import { SessionsCollection } from '../db/models/session.js';
+import { UsersCollection } from '../db/models/user.js';
 
-  if (bearer !== "Bearer" || !token) {
-    return next(createError(401, "Not authorized"));
+export const authenticate = async (req, res, next) => {
+  const authHeader = req.get('Authorization');
+
+  if (!authHeader) {
+
+    next(createHttpError(401, 'Please provide Authorization header'));
+    return;
   }
 
-  try {
-    const { id } = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+  const bearer = authHeader.split(' ')[0];
+  const token = authHeader.split(' ')[1];
 
-    const session = await Session.findOne({ userId: id, accessToken: token });
-    if (!session) {
-      return next(createError(401, "Session expired or token invalid"));
-    }
+  if (bearer !== 'Bearer' || !token) {
+    next(createHttpError(401, 'Auth header should be of type Bearer'));
+    return;
 
-    const user = await User.findById(id);
-    if (!user) {
-      return next(createError(401, "Not authorized"));
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    next(createError(401, "Not authorized"));
-    console.error(error);
   }
+
+  const session = await SessionsCollection.findOne({ accessToken: token });
+
+  if (!session) {
+
+    next(createHttpError(401, 'Session not found'));
+    return;
+
+  }
+
+  const isAccessTokenExpired =
+    new Date() > new Date(session.accessTokenValidUntil);
+
+  if (isAccessTokenExpired) {
+
+    next(createHttpError(401, 'Access token expired'));
+
+  }
+
+  const user = await UsersCollection.findById(session.userId);
+
+  if (!user) {
+
+    next(createHttpError(401, 'User not found'));
+
+    return;
+  }
+
+  req.user = user;
+
+  next();
 };
-
-export default authenticate;

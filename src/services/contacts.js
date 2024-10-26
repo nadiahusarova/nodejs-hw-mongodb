@@ -19,3 +19,20 @@ export const findContactById = async (contactId) => {
     throw error;
   }
 };
+
+export const createContact = async (contactData) => {
+  const newContact = await contactsModel.create(contactData);
+  return newContact;
+};
+
+export const updateContactById = async (contactId, updateData) => {
+  return contactsModel.findByIdAndUpdate(
+    contactId,
+    { $set: updateData },
+    { new: true, runValidators: true }
+  );
+};
+
+export const deleteContactById = async (contactId) => {
+  return contactsModel.findByIdAndDelete(contactId);
+};

@@ -3,6 +3,8 @@ import cors from "cors";
 import pino from "pino";
 import expressPinoLogger from "express-pino-logger";
 import contactsRouter from "./routes/contactsRoutes.js";
+import errorHandler from "./middlewares/errorHandler.js";
+import notFoundHandler from "./middlewares/notFoundHandler.js";
 
 const logger = pino();
 const expressLogger = expressPinoLogger({ logger });
@@ -16,11 +18,9 @@ function setupServer() {
 
   app.use("/contacts", contactsRouter);
 
-  app.use((req, res) => {
-    res.status(404).json({
-      message: "Not found",
-    });
-  });
+  app.use(notFoundHandler);
+
+  app.use(errorHandler);
 
   const port = process.env.PORT || 3000;
   app.listen(port, () => {

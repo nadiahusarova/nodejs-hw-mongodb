@@ -1,12 +1,16 @@
-import express from "express";
-import {
-  getContactsController,
-  getContactById,
-} from "../controllers/contactsController.js";
+import { Router } from "express";
+import contactsController from "../controllers/contactsController.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", getContactsController);
-router.get("/:contactId", getContactById);
+router.get("/", contactsController.getContactsController);
+
+router.get("/:contactId", contactsController.getContactById);
+
+router.post("/", contactsController.createContactController);
+
+router.patch("/:contactId", contactsController.updateContactById);
+
+router.delete("/:contactId", contactsController.deleteContactById);
 
 export default router;

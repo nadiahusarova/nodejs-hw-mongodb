@@ -13,7 +13,15 @@ const contactSchema = new mongoose.Schema(
       default: "personal",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 const contactsModel = mongoose.model("contact", contactSchema);
